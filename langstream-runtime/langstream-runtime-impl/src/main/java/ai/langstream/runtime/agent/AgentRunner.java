@@ -626,7 +626,7 @@ public class AgentRunner {
 
     static void runMainLoop(
             AgentSource source,
-            AgentProcessor function,
+            AgentProcessor processor,
             AgentSink sink,
             AgentContext agentContext,
             ErrorsHandler errorsHandler,
@@ -634,10 +634,10 @@ public class AgentRunner {
             throws Exception {
         source.setContext(agentContext);
         sink.setContext(agentContext);
-        function.setContext(agentContext);
+        processor.setContext(agentContext);
         source.start();
         sink.start();
-        function.start();
+        processor.start();
 
         SourceRecordTracker sourceRecordTracker = new SourceRecordTracker(source);
         AtomicReference<Exception> fatalError = new AtomicReference<>();
@@ -647,7 +647,7 @@ public class AgentRunner {
             if (records != null && !records.isEmpty()) {
                 // in case of permanent FAIL this method will throw an exception
                 runProcessorAgent(
-                        function,
+                        processor,
                         records,
                         errorsHandler,
                         source,
@@ -676,8 +676,8 @@ public class AgentRunner {
 
                             sourceRecordTracker.track(List.of(sourceRecordAndResult));
                             try {
-                                // the function maps the record coming from the Source to records to
-                                // be sent to the Sink
+                                // the processor maps the record coming from the Source to records
+                                // to be sent to the Sink
                                 processRecordsOnTheSink(
                                         sink,
                                         sourceRecordAndResult,
@@ -815,8 +815,7 @@ public class AgentRunner {
                                     setFatalError(permanentFailureException, fatalError);
                                 } else {
                                     // in case the source does not throw an exception we mark the
-                                    // record as
-                                    // "skipped"
+                                    // record as "skipped"
                                     sourceRecordTracker.commit(List.of(record));
                                 }
                                 return;
